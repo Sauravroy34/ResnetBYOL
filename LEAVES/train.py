@@ -104,39 +104,42 @@ def trainBYOL(model = model, trainloader = trainloader, validloader =validloader
 
         loop = tqdm(trainloader, desc=f"Epoch {e+1}/{epochs} [Train]")
         for batch in loop:
-            x1, x2 = batch
-            print(x1.shape)
+            x1, x2, label = batch
+            
             x1 = x1.to(device, dtype=torch.float)
             x2 = x2.to(device, dtype=torch.float)
 
+            # 1. Zero all gradients at the start
             optimizer_view.zero_grad()
             optimizer_online.zero_grad()
 
-            # Forward pass
+            # 2. Forward pass
             loss = model(x1, x2)
 
+            # 3. Compute gradients for View Makers (Maximize loss)
             set_requires_grad(online_modules, False)
             set_requires_grad(view_modules, True)
-
+            
             view_maker_loss = -loss
             view_maker_loss.backward(retain_graph=True)
-            optimizer_view.step()
 
+            # 4. Compute gradients for Online Network (Minimize loss)
             set_requires_grad(view_modules, False)
             set_requires_grad(online_modules, True)
-
-            optimizer_view.zero_grad()
-
+            
             loss.backward()
+
+            # 5. Step both optimizers ONLY AFTER all backward passes are done
+            optimizer_view.step()
             optimizer_online.step()
 
+            # 6. EMA update
             model.update_moving_average()
 
+            # Logging
             epoch_loss_view += view_maker_loss.item()
             epoch_loss_online += loss.item()
-            
             loop.set_postfix(Online_Loss=loss.item(), View_Loss=view_maker_loss.item())
-
         avg_train_online_loss = epoch_loss_online / len(trainloader)
         avg_train_view_loss = epoch_loss_view / len(trainloader)
         

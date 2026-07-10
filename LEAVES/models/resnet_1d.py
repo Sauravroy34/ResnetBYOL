@@ -119,9 +119,10 @@ class ResNet50_1d(nn.Module):
     ) -> None:
         super().__init__()
 
+        self.return_last_hidden_state = return_last_hidden_state
         self.in_channels_current = 64
         layers: List[int] = [3, 4, 6, 3]  # ResNet-50 config
-
+        
         # ── Stem ──────────────────────────────────────────────
         self.conv1 = nn.Conv1d(
             in_channels, 64, kernel_size=7, stride=2, padding=3, bias=False
