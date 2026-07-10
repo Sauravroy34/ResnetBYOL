@@ -104,7 +104,7 @@ def trainBYOL(model = model, trainloader = trainloader, validloader =validloader
 
         loop = tqdm(trainloader, desc=f"Epoch {e+1}/{epochs} [Train]")
         for batch in loop:
-            x1, x2, label = batch
+            x1, x2 = batch
             
             x1 = x1.to(device, dtype=torch.float)
             x2 = x2.to(device, dtype=torch.float)
@@ -150,7 +150,7 @@ def trainBYOL(model = model, trainloader = trainloader, validloader =validloader
         with torch.no_grad():
             val_loop = tqdm(validloader, desc=f"Epoch {e+1}/{epochs} [Valid]", leave=False)
             for batch in val_loop:
-                x1, x2, _ = batch
+                x1, x2 = batch
                 x1 = x1.to(device, dtype=torch.float)
                 x2 = x2.to(device, dtype=torch.float)
                 
@@ -178,4 +178,7 @@ def trainBYOL(model = model, trainloader = trainloader, validloader =validloader
     print("Training Complete. Final model saved.")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+print(f"on device => {device}")
 trainBYOL(device = device)
