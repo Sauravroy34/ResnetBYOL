@@ -20,7 +20,7 @@ class ECGBYOLDataset(Dataset):
         
         # If your signal is 1D (length), BYOL usually expects (channels, length)
         # Uncomment the next line if you get dimensionality errors in your ResNet1D:
-        # signal = signal.unsqueeze(0) 
+        signal = signal.unsqueeze(0) 
         
         # Duplicating the signal since your view makers handle the transformations
         x1 = signal.clone()
@@ -73,7 +73,7 @@ def set_requires_grad(modules, val):
         for param in mod.parameters():
             param.requires_grad = val
 
-def trainBYOL(model, trainloader, validloader, device):
+def trainBYOL(model = model, trainloader = trainloader, validloader =validloader , device = "cpu"):
     view_parameters = list(model.view1.parameters()) + list(model.view2.parameters())
     if hasattr(model.view1, 'params'):
         view_parameters += model.view1.params + model.view2.params
@@ -96,7 +96,7 @@ def trainBYOL(model, trainloader, validloader, device):
 
     # Initialize early stopping
     early_stopping = EarlyStopping(patience=3, delta=0.001)
-
+    model.to(device)
     for e in range(epochs):
         # ---------------- TRAINING PHASE ----------------
         model.train()
@@ -104,8 +104,8 @@ def trainBYOL(model, trainloader, validloader, device):
 
         loop = tqdm(trainloader, desc=f"Epoch {e+1}/{epochs} [Train]")
         for batch in loop:
-            x1, x2, label = batch
-            
+            x1, x2 = batch
+            print(x1.shape)
             x1 = x1.to(device, dtype=torch.float)
             x2 = x2.to(device, dtype=torch.float)
 
@@ -173,3 +173,6 @@ def trainBYOL(model, trainloader, validloader, device):
     # Save final model
     torch.save(model.online_encoder.state_dict(), f"{base_save_path}_final.pth")
     print("Training Complete. Final model saved.")
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+trainBYOL(device = device)

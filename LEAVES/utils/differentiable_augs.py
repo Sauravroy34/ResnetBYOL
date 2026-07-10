@@ -125,7 +125,7 @@ def magnitude_warp(x, sigma, knot=4):
 ## freq drepression
 def freq_depress(x, rate, temperature=10.0, scale_factor=1.0, dim=1):
     xy_f = torch.fft.fft(x, dim=dim)
-    x_device = x.get_device()
+    x_device = x.device
     
     # Soft mask creation
     m_value = (torch.FloatTensor(xy_f.shape).uniform_().to(x_device) - rate) * temperature
